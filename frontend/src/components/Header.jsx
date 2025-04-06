@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom'; // Import Link and useNavigate
-import Doctors from '../assets/doctors.jpg';
+import Doctors from '../assets/Doctors.jpg';
 
 const Header = () => {
   const navigate = useNavigate(); // Define navigate
