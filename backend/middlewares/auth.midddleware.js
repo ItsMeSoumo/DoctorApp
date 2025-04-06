@@ -16,7 +16,7 @@ export const isAuthenticated = async (req, res, next) => {
             if (err) {
                 return res.status(401).json({ message: 'Auth failed', success: false });
             } else {
-                req.body.userId = decode.id;
+                req.userId = decode.id;
                 next();
             }
         });

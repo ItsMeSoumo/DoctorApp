@@ -49,7 +49,7 @@ export const login = async(req, res) => {
 
 export const getUserData = async(req, res) => {
     try{
-        const user = await userModel.findOne({_id: req.body.userId})
+        const user = await userModel.findOne({_id: req.userId})
         if(!user){
             return res.status(200).send({
                 message: "user not found", 
