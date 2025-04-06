@@ -34,12 +34,18 @@ export const login = async(req, res) => {
             return res.status(200).send({message: `Invalid Email and Password`, success: false})
         }
         const token = jwt.sign({id: user._id}, process.env.JWT_SECRET, {expiresIn: '2d' })
-        res.status(200).send({message: `Login Succesfull`, success: true, token, 
-            role: {   
-            isAdmin: user.isAdmin,
-            isDoctor: user.isDoctor
-         }
-     })
+        res.status(200).send({
+            message: `Login Successful`, 
+            success: true, 
+            token,
+            data: {
+                name: user.name,
+                email: user.email,
+                isAdmin: user.isAdmin,
+                isDoctor: user.isDoctor,
+                _id: user._id
+            }
+        })
     }
     catch(error){
         console.log(error)
@@ -81,6 +87,7 @@ export const applyDoctors = async (req, res) => {
       const newDoctor = new doctorModel({
         ...req.body,
         status: 'pending',
+        userId: req.body.userId
       });
       await newDoctor.save();
   

@@ -76,7 +76,7 @@ export const changeStatus = async(req, res) => {
             status
         })
 
-        const user = await userModel.findOne({_id: doctor.userId})
+        const user = await userModel.findOne({ _id: doctor.userId })
         const notification = user.notification
         notification.push({
             type: 'doctor-account-request-updated',
@@ -85,7 +85,6 @@ export const changeStatus = async(req, res) => {
         })
 
         user.isDoctor = status === 'approved' ? true : false
-
         await user.save()
 
         res.status(201).send({

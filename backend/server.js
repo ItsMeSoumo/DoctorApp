@@ -14,7 +14,7 @@ app.use(express.json())
 connectDB();
 
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'https://ouraurahealth.netlify.app'],
+    origin: [process.env.CLIENT_URL],
     credentials: true
 }))
 
@@ -26,5 +26,5 @@ app.use('/api/v1/admin', adminRoute)
 app.use('/api/v1/doctor', doctorRoute)
 
 app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Server is running on ${port}`);
 });

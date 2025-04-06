@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  base = "frontend"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[build.environment]
+  VITE_DB_URL = "https://doctorapp-backend-mx4r.onrender.com/api/v1"
+  VITE_DB_ORIGIN = "https://doctorapp-backend-mx4r.onrender.com" 
