@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/register', register);
 router.post('/login', login);
-router.post('/getUserData', isAuthenticated, getUserData)
+router.get('/getUserData', isAuthenticated, getUserData)
 router.post('/apply-doctors', isAuthenticated, applyDoctors);
 router.post('/getNotification', isAuthenticated, getNotification);
 

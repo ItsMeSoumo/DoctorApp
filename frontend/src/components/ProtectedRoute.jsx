@@ -10,14 +10,7 @@ export default function ProtectedRoute({children}) {
 
     const getUser = async () => {
         try {
-            const res = await axiosinstance.post('/user/getUserData',
-                 {token : localStorage.getItem("token")},
-                 {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`
-                    }
-                 }
-            );
+            const res = await axiosinstance.get('/user/getUserData');
             if(res.data.success){
                 dispatch(setUser(res.data.data))
             }else{
@@ -27,6 +20,7 @@ export default function ProtectedRoute({children}) {
         } catch(error){
             localStorage.clear()
             console.log(error)
+            return <Navigate to="/login"/>;
         }
     };
     
@@ -34,12 +28,11 @@ export default function ProtectedRoute({children}) {
         if(!user){
             getUser();
         }
-    }, [user, getUser])
+    }, [user])
    
     if(localStorage.getItem("token")){
         return children;
     }else{
         return <Navigate to="/login"/>
     }
-
 }
