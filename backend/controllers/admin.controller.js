@@ -1,5 +1,6 @@
 import userModel from '../models/userModels.js'
 import doctorModel from '../models/doctorModel.js'
+import jwt from 'jsonwebtoken'
 
 export const getAllUsers = async(req, res) => {
     try{
@@ -69,36 +70,89 @@ export const getAllDoctors = async(req, res) => {
     }
 }
 
-export const changeStatus = async(req, res) => {
-    try{
-        const { doctorId, status } = req.body
-        const doctor = await doctorModel.findByIdAndUpdate(doctorId, {
-            status
-        })
+// export const changeStatus = async (req, res) => {
+//   try {
+//     const { doctorId, status } = req.body;
 
-        const user = await userModel.findOne({ _id: doctor.userId })
-        const notification = user.notification
-        notification.push({
-            type: 'doctor-account-request-updated',
-            message: `Your Doctor Account Request Has ${status}`,
-            onClickPath: '/notification'
-        })
+//     // Step 1: Update doctor status
+//     const doctor = await doctorModel.findByIdAndUpdate(
+//       doctorId,
+//       { status },
+//       { new: true } // returns updated doc
+//     );
 
-        user.isDoctor = status === 'approved' ? true : false
-        await user.save()
+//     // Step 2: Find the user related to that doctor
+//     const user = await userModel.findById(doctor.userId);
 
-        res.status(201).send({
-            success: true,
-            message: 'Account Status Updated',
-            data: doctor
-        })
+//     // Step 3: Update user's isDoctor flag
+//     user.isDoctor = status === "approved" ? true : false;
 
-    } catch(error){
-        console.log(error)
-        res.status(500).send({
-            message:'Error in Account Status',
-            success: false,
-            error
-        })
+//     // Step 4: Add notification
+//     const notification = user.notification || [];
+//     notification.push({
+//       type: "doctor-account-request-updated",
+//       message: `Your Doctor Account Request Has ${status}`,
+//       onClickPath: "/notification",
+//     });
+
+//     // Step 5: Save user
+//     user.notification = notification;
+//     await user.save();
+
+//     res.status(200).send({
+//       success: true,
+//       message: "Account Status Updated",
+//       data: doctor,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       success: false,
+//       message: "Error in Account Status",
+//       error,
+//     });
+//   }
+// };
+
+  
+export const changeStatus = async (req, res) => {
+    try {
+      const { doctorId, status } = req.body;
+  
+      
+      const doctor = await doctorModel.findByIdAndUpdate(
+        doctorId,
+        { status },
+        { new: true } 
+      );
+  
+      
+      const user = await userModel.findById(doctor.userId);
+  
+  
+      const notification = user.notification || [];
+      notification.push({
+        type: "doctor-account-request-updated",
+        message: `Your Doctor Account Request Has ${status}`,
+        onClickPath: "/notification",
+      });
+
+      user.isDoctor = status === "approved" ? true : false;
+      
+      user.notification = notification;
+      await user.save();
+  
+      res.status(200).send({
+        success: true,
+        message: "Account Status Updated",
+        data: doctor,
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({
+        success: false,
+        message: "Error in Account Status",
+        error,
+      });
     }
-}
+  };

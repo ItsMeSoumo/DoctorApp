@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import '@ant-design/v5-patch-for-react-19';
 import { Form, Input, Select, Button, message, InputNumber, TimePicker, Row, Col } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -14,13 +14,86 @@ const ApplyDoctors = () => {
   const dispatch = useDispatch();
   const [form] = Form.useForm();
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.user);
+
+  const [userData, setUserData] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const specializations = [
     'Cardiology', 'Dermatology', 'Neurology', 'Pediatrics', 'Psychiatry', 'Orthopedics'
   ];
 
-  const { user } = useSelector((state) => state.user);
+  // 🔁 getUserInfo copied from Profile
+  const getUserInfo = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosinstance.get("/user/getUserData");
+      if (res.data.success) {
+        setUserData({
+          name: res.data.data.name || "",
+          email: res.data.data.email || "",
+          phone: res.data.data.phone || "",
+          gender: res.data.data.gender || ""
+        });
+      } else {
+        message.error(res.data.message || "Failed to fetch user info");
+      }
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      message.error("Something went wrong while fetching user info");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // 🔁 handleFinish copied from Profile
+  // const handleFinish = async () => {
+  //   try {
+  //     setLoading(true);
+  //     if (!userData.name || !userData.email) {
+  //       message.error("Name and email are required");
+  //       return;
+  //     }
+
+  //     const updateData = {
+  //       userId: user._id,
+  //       name: userData.name,
+  //       email: userData.email
+  //     };
+
+  //     if (userData.phone) updateData.phone = userData.phone;
+  //     if (userData.gender) updateData.gender = userData.gender;
+
+  //     const res = await axiosinstance.post("/user/updateUserInfo", updateData, {
+  //       headers: {
+  //         Authorization: `Bearer ${user.token}`,
+  //       },
+  //     });
+
+  //     if (res.data.success) {
+  //       message.success("Profile updated successfully");
+  //       await getUserInfo();
+  //     } else {
+  //       message.error(res.data.message || "Failed to update profile");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating profile:", error);
+  //     if (error.response?.data?.message) {
+  //       message.error(error.response.data.message);
+  //     } else {
+  //       message.error("Something went wrong while updating profile");
+  //     }
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // Tu chaahe toh ye call kar sakta hai mount pe:
+  useEffect(() => {
+    getUserInfo();
+  }, []);
+
+  // Doctor Application submit
   const handleApplyDoc = async (values) => {
     try {
       const formattedValues = {
@@ -56,32 +129,29 @@ const ApplyDoctors = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 px-8 py-12">
       <div className="bg-white p-10 rounded-lg shadow-lg w-full max-w-4xl">
+        {/* <h1 className="text-3xl font-semibold text-center mb-6">PLEASE SAVE YOUR PROFILE BEFORE APPLYING !!</h1> */}
         <h2 className="text-3xl font-semibold text-center mb-6">Doctor Registration</h2>
 
         <Form form={form} layout="vertical" onFinish={handleApplyDoc}>
           <Row gutter={16}>
-            {/* First Name */}
             <Col span={12}>
               <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}>
                 <Input placeholder="Enter First Name" />
               </Form.Item>
             </Col>
 
-            {/* Last Name */}
             <Col span={12}>
               <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}>
                 <Input placeholder="Enter Last Name" />
               </Form.Item>
             </Col>
 
-            {/* Email */}
             <Col span={12}>
               <Form.Item name="email" label="Email" rules={[{ required: true, type: "email" }]}>
                 <Input placeholder="Enter Email Address" />
               </Form.Item>
             </Col>
 
-            {/* Specialization */}
             <Col span={12}>
               <Form.Item name="specialization" label="Specialization" rules={[{ required: true }]}>
                 <Select placeholder="Select a Specialization">
@@ -92,28 +162,30 @@ const ApplyDoctors = () => {
               </Form.Item>
             </Col>
 
-            {/* Experience */}
             <Col span={12}>
               <Form.Item name="experience" label="Experience (Years)" rules={[{ required: true }]}>
                 <InputNumber min={0} max={50} style={{ width: "100%" }} placeholder="Experience in Years" />
               </Form.Item>
             </Col>
 
-            {/* Fees */}
             <Col span={12}>
               <Form.Item name="fees" label="Consultation Fees" rules={[{ required: true }]}>
                 <InputNumber min={0} style={{ width: "100%" }} placeholder="Enter Fees" />
               </Form.Item>
             </Col>
 
-            {/* Timings */}
+            <Col span={12}>
+              <Form.Item name="location" label="Location" tooltip="Enter your clinic/hospital location">
+                <Input placeholder="Enter your location" />
+              </Form.Item>
+            </Col>
+
             <Col span={12}>
               <Form.Item name="timings" label="Available Timings" rules={[{ required: true }]}>
                 <RangePicker format="HH:mm" style={{ width: "100%" }} placeholder={["Start Time", "End Time"]} />
               </Form.Item>
             </Col>
 
-            {/* Password */}
             <Col span={12}>
               <Form.Item name="password" label="Password" rules={[{ required: true }]}>
                 <Input.Password placeholder="Enter Password" />
@@ -121,7 +193,6 @@ const ApplyDoctors = () => {
             </Col>
           </Row>
 
-          {/* Submit Button */}
           <Form.Item>
             <Button type="primary" htmlType="submit" block>
               Register as Doctor

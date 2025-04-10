@@ -19,6 +19,9 @@ import Notification from "./pages/Notification";
 import Userlist from "./pages/admin/userlist";
 import Doctorlist from "./pages/admin/doctorlist";
 import Doctorprofile from "./pages/doctor/docprofile";
+import UserAppointments from "./pages/UserAppointments";
+import DoctorAppointments from "./pages/doctor/DoctorAppointments";
+import DocHome from "./pages/doctor/DocHome";
 
 const App = () => {
   // const { loading } = useSelector(state => state.alert); 
@@ -33,7 +36,7 @@ const App = () => {
           <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
           <Route path="/doctors" element={<ProtectedRoute><Doctors /></ProtectedRoute>} />
           <Route path="/doctors/:speciality" element={<ProtectedRoute><Doctors /></ProtectedRoute>} />
-          <Route path="/appointment" element={<ProtectedRoute><Appointment /></ProtectedRoute>} />
+          {/* <Route path="/appointment" element={<ProtectedRoute><BookAppointment /></ProtectedRoute>} /> */}
           <Route path="/appointment/:speciality" element={<ProtectedRoute><Appointment /></ProtectedRoute>} />
           <Route path="/my" element={<ProtectedRoute><My/></ProtectedRoute>} />
           <Route path="/my-profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -44,6 +47,10 @@ const App = () => {
           <Route path="/userlist" element={<ProtectedRoute><Userlist /></ProtectedRoute>} />
           <Route path="/doctorlist" element={<ProtectedRoute><Doctorlist /></ProtectedRoute>} />
           <Route path="/doctor/profile/:id" element={<ProtectedRoute><Doctorprofile /></ProtectedRoute>} />
+          <Route path="/doctor/appointment/:doctorId" element={<ProtectedRoute><Appointment /></ProtectedRoute>} />
+          <Route path="/userappointments" element={<ProtectedRoute><UserAppointments /></ProtectedRoute>} />
+          <Route path="/doctor-appointments" element={<ProtectedRoute><DoctorAppointments /></ProtectedRoute>} />
+          <Route path="/doctor-home" element={<ProtectedRoute><DocHome /></ProtectedRoute>} />
         </Routes>
       </div>
       <Footer />

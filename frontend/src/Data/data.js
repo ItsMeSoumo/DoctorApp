@@ -16,6 +16,16 @@ export const userMenu = [
     path: "/apply-doctors",
     icon: "fa-solid fa-user-doctor",
   },
+  // {
+  //   name: "Book Appointment",
+  //   path: "/doctor/appointment/:doctorId",
+  //   icon: "fa-solid fa-user",
+  // },
+  {
+    name: "Appointments",
+    path: "/userappointments",
+    icon: "fa-solid fa-user",
+  },
   {
     name: "Profile",
     path: "/my-profile",
@@ -66,9 +76,9 @@ export const adminMenu = [
       path: `/doctor/profile/${user?._id}`,
       icon: "fa-solid fa-user",
     },
-    {
-      name: "My Patients",
-      path: "/my-patients",
-      icon: "fa-solid fa-users",
-    },
+    // {
+    //   name: "My Patients",
+    //   path: "/my-patients",
+    //   icon: "fa-solid fa-users",
+    // },
   ]}

@@ -1,35 +1,59 @@
 import React, { useState, useEffect } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import '@ant-design/v5-patch-for-react-19';
-import me from "../assets/me.jpg";
-import { message } from "antd";
+import { message, Select, Button, Card, Spin } from "antd";
+import { axiosinstance } from "../components/utilities/axiosinstance.js";
+import { useSelector } from "react-redux";
+import { UserOutlined, MailOutlined, PhoneOutlined, TeamOutlined } from '@ant-design/icons';
+
+const { Option } = Select;
 
 const Profile = () => {
   const navigate = useNavigate();
+  const user = useSelector((state) => state.user.user);
+  const [userData, setUserData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    gender: "",
+  });
+  const [isEdit, setIsEdit] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleLogOut = () => {
-    localStorage.clear()
-    message.success("Logged out Succesfully")
-    navigate("/login")
-  }
+    localStorage.clear();
+    message.success("Logged out Successfully");
+    navigate("/login");
+  };
 
-  const [userData, setUserData] = useState(() => {
-    const savedData = localStorage.getItem("userData");
-    return savedData
-      ? JSON.parse(savedData)
-      : {
-          name: "User",
-          age: "",
-          email: "",
-          phone: "",
-          gender: "",
-          image: me,
-        };
-  });
+  const getUserInfo = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosinstance.get("/user/getUserData");
+      if (res.data.success) {
+        setUserData({
+          name: res.data.data.name || "",
+          email: res.data.data.email || "",
+          phone: res.data.data.phone || "",
+          gender: res.data.data.gender || ""
+        });
+      } else {
+        message.error(res.data.message || "Failed to fetch user info");
+      }
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      message.error("Something went wrong while fetching user info");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const [isEdit, setIsEdit] = useState(false);
+  useEffect(() => {
+    if (user && user._id) {
+      getUserInfo();
+    }
+  }, [user]);
 
-  // ✅ Input change function
   const handleInputChange = (e, field) => {
     setUserData((prev) => ({
       ...prev,
@@ -37,139 +61,156 @@ const Profile = () => {
     }));
   };
 
-  // ✅ Image Upload Function
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setUserData((prev) => ({
-          ...prev,
-          image: reader.result, 
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Remove Image
-  const handleRemoveImage = () => {
+  const handleGenderChange = (value) => {
     setUserData((prev) => ({
       ...prev,
-      image: "", 
+      gender: value,
     }));
   };
 
-  // Save updated data in localStorage
-  const handleSave = () => {
-    localStorage.setItem("userData", JSON.stringify(userData));
-    setIsEdit(false);
+  const handleFinish = async () => {
+    try {
+      setLoading(true);
+      if (!userData.name || !userData.email) {
+        message.error("Name and email are required");
+        return;
+      }
+
+      const updateData = {
+        userId: user._id,
+        name: userData.name,
+        email: userData.email
+      };
+
+      if (userData.phone) updateData.phone = userData.phone;
+      if (userData.gender) updateData.gender = userData.gender;
+
+      const res = await axiosinstance.post("/user/updateUserInfo", updateData, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      });
+      
+      if (res.data.success) {
+        message.success("Profile updated successfully");
+        setIsEdit(false);
+        await getUserInfo();
+      } else {
+        message.error(res.data.message || "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      if (error.response?.data?.message) {
+        message.error(error.response.data.message);
+      } else {
+        message.error("Something went wrong while updating profile");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-12">
-      <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
-        {/* Profile Image */}
-        <div className="relative w-48 h-48 flex-shrink-0">
-          {userData.image ? (
-            <img
-              src={userData.image}
-              alt={`${userData.name}'s profile`}
-              className="w-full h-full rounded-full object-cover border-4 border-gray-200"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-300 rounded-full border-4 border-gray-200">
-              <span className="text-gray-600">No Image</span>
-            </div>
-          )}
-
-          {isEdit && (
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 flex gap-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="bg-white text-xs p-1 rounded cursor-pointer"
-              />
-              {userData.image && (
-                <button
-                  onClick={handleRemoveImage}
-                  className="bg-red-500 text-white px-2 py-1 text-xs rounded"
-                >
-                  Remove
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* User Information */}
-        <div className="flex-1 text-center md:text-left">
-          {/* Name Field */}
-          <div className="flex items-center gap-2 mb-4">
-            {isEdit ? (
-              <input
-                type="text"
-                value={userData.name}
-                onChange={(e) => handleInputChange(e, "name")}
-                className="text-2xl font-bold text-gray-900 border-b-2 border-blue-500 focus:outline-none"
-              />
-            ) : (
-              <h2 className="text-2xl font-bold text-gray-900">{userData.name}</h2>
-            )}
-            <button
-              onClick={() => setIsEdit(!isEdit)}
-              className="p-2 text-blue-500 hover:text-blue-600"
-            >
-              {isEdit ? "✓" : "✎"}
-            </button>
-          </div>
-
-          {/* Editable Fields */}
-          <div className="space-y-2">
-            {["email", "phone", "age", "gender"].map((field) => (
-              <div key={field} className="flex items-center gap-2">
-                <span className="font-medium capitalize">{field}:</span>
-                {isEdit ? (
-                  <input
-                    type={field === "age" ? "number" : "text"}
-                    value={userData[field]}
-                    onChange={(e) => handleInputChange(e, field)}
-                    className="border-b-2 border-gray-300 focus:border-blue-500 outline-none flex-1"
-                  />
-                ) : (
-                  <span>{userData[field]}</span>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {isEdit && (
-            <button
-              onClick={handleSave}
-              className="mt-4 bg-green-500 text-white py-2 px-4 rounded-lg"
-            >
-              Save Changes
-            </button>
-          )}
-        </div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spin size="large" />
       </div>
+    );
+  }
 
-      {/* Navigation Button */}
-      <button
-        onClick={() => navigate("/my")}
-        className="w-full mt-6 bg-blue-500 text-white py-3 px-4 rounded-lg"
-      >
-        My Appointments
-      </button>
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-3xl mx-auto px-4">
+        <Card className="shadow-lg">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Profile</h1>
+            <div className="space-x-4">
+              {!isEdit ? (
+                <Button type="primary" onClick={() => setIsEdit(true)}>
+                  Edit Profile
+                </Button>
+              ) : (
+                <Button type="primary" onClick={handleFinish} loading={loading}>
+                  Save Changes
+                </Button>
+              )}
+              <Button onClick={handleLogOut} danger>
+                Logout
+              </Button>
+            </div>
+          </div>
 
-      {/*Log Out*/}
-      <button
-        onClick={handleLogOut}
-        className="w-full mt-6 bg-blue-500 text-white py-3 px-4 rounded-lg"
-      >
-        Log Out
-      </button>
+          <div className="space-y-6">
+            <div className="flex items-center space-x-4">
+              <UserOutlined className="text-gray-400 text-xl" />
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={userData.name}
+                  onChange={(e) => handleInputChange(e, "name")}
+                  disabled={!isEdit || loading}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <MailOutlined className="text-gray-400 text-xl" />
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={userData.email}
+                  onChange={(e) => handleInputChange(e, "email")}
+                  disabled={!isEdit || loading}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <PhoneOutlined className="text-gray-400 text-xl" />
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  value={userData.phone}
+                  onChange={(e) => handleInputChange(e, "phone")}
+                  disabled={!isEdit || loading}
+                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <TeamOutlined className="text-gray-400 text-xl" />
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gender
+                </label>
+                <Select
+                  value={userData.gender}
+                  onChange={handleGenderChange}
+                  disabled={!isEdit || loading}
+                  className="w-full"
+                  placeholder="Select gender"
+                >
+                  <Option value="male">Male</Option>
+                  <Option value="female">Female</Option>
+                  <Option value="other">Other</Option>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

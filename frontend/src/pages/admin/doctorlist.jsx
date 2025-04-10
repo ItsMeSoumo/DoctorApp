@@ -26,7 +26,7 @@ const DoctorList = () => {
         '/admin/changeStatus',
         {
           doctorId: record._id,
-          userId: record.userId,
+          userId : record.userId, 
           status: status,
         },
         {
@@ -37,11 +37,12 @@ const DoctorList = () => {
       );
       if (res.data.success) {
         message.success(res.data.message);
-        getDoctors(); // ✅ reload from API instead of full page reload
+        getDoctors(); // Reload the doctors list
       } else {
         message.error(res.data.message);
       }
     } catch (error) {
+      console.error('Error:', error);
       message.error('Error in status update');
     }
   };

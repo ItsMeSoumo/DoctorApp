@@ -1,159 +1,144 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import doc1 from '../assets/doctor1.jpg';
-import doc2 from '../assets/doctor2.jpg';    
-import doc3 from '../assets/doctor3.jpg';
-import doc4 from '../assets/doctor4.webp';
+import { useNavigate } from 'react-router-dom';
 import { axiosinstance } from '../components/utilities/axiosinstance';
+import { Row, Col, Card, Button, message, Spin } from 'antd';
+import { UserOutlined } from '@ant-design/icons';
 
 const Doctors = () => {
-
-  // Doctor data fetch function
-  const [doctor, setDoctor] = useState([]);
-  const getAllDoc = async () => {
-    try {
-      const res = await axiosinstance.get(
-        "/user/getAllDoc",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`
-          }
-        }
-      );
-      if (res.data.success) {
-        setDoctor(res.data.data);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    getAllDoc();
-  }, []);
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedSpeciality, setSelectedSpeciality] = useState(null);
 
   const navigate = useNavigate();
-  const { speciality } = useParams(); // Get speciality from params
-  const specialities = ['Gynecologist', 'Pediatrician', 'Neurologist', 'Orthopedic'];
-  const crewMembers = [
-    { id: 1, name: 'Gynecologist', image: doc1 },
-    { id: 2, name: 'Pediatrician', image: doc2 },
-    { id: 3, name: 'Neurologist', image: doc3 },
-    { id: 4, name: 'Orthopedic', image: doc4 },
-  ];
 
-  const [selectedSpeciality, setSelectedSpeciality] = useState(null);
-  const [city, setCity] = useState('');
-  const [isCitySelected, setIsCitySelected] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
+  const getAllDoc = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        message.error("Please login to view doctors");
+        navigate("/login");
+        return;
+      }
+      const res = await axiosinstance.get("/user/getAllDoc");
+      if (res.data.success) {
+        setDoctors(res.data.data);
+      } else {
+        message.error(res.data.message || "Error fetching doctors");
+      }
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
+      if (error.response?.status === 401) {
+        message.error("Please login to view doctors");
+        navigate("/login");
+      } else {
+        message.error(error.response?.data?.message || "Error fetching doctors");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (speciality) {
-      console.log('Speciality from params:', speciality);
-      setSelectedSpeciality(speciality);
+    const token = localStorage.getItem("token");
+    if (token) {
+      getAllDoc();
     } else {
-      console.log('No speciality from params');
-      setSelectedSpeciality(null); // Show all doctors by default
+      navigate("/login");
     }
-  }, [speciality]);
+  }, [navigate]);
 
-  const handleImageClick = (speciality) => {
-    console.log('Clicked speciality:', speciality); // Debugging log
-    navigate(`/appointment/${speciality}`);
-  };
-
-  const handleCitySelect = () => {
-    if (city.toLowerCase() === 'kolkata') {
-      setIsCitySelected(true);
-    } else {
-      alert('Currently, we only support Kolkata');
-    }
-  };
-
-  const handleCityChange = (e) => {
-    const value = e.target.value;
-    setCity(value);
-    if (value.toLowerCase().startsWith('k')) {
-      setSuggestions(['Kolkata']);
-    } else {
-      setSuggestions([]);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion) => {
-    setCity(suggestion);
-    setSuggestions([]);
-  };
+  const specialties = ['All', 'Cardiology', 'Gynecology', 'Pediatrics', 'Neurology', 'Orthopedic', 'Dermatology'];
 
   return (
     <div className="flex flex-col items-center justify-center p-8 mt-5 max-w-[85rem] mx-auto rounded-lg space-y-10">
-      {/* City Selection */}
-      {/* {!isCitySelected && (
-        <div className="flex flex-col items-center space-y-4">
-          <h2 className="text-xl font-bold">Select City</h2>
-          <div className="relative w-full">
-            <input
-              type="text"
-              value={city}
-              onChange={handleCityChange}
-              placeholder="Enter city (only Kolkata supported)"
-              className="p-2 border rounded-lg w-full"
-              style={{ marginBottom: 0 }} // Ensure no margin at the bottom
-            />
-            {suggestions.length > 0 && (
-              <ul 
-                className="absolute bg-blue-50 rounded-md w-11/12 z-10"
-                style={{ marginTop: '4px' }} // Add margin-top for spacing
-              >
-                {suggestions.map((suggestion, index) => (
-                  <li
-                    key={index}
-                    onClick={() => handleSuggestionClick(suggestion)}
-                    className="p-2 cursor-pointer rounded-md hover:bg-blue-100"
-                  >
-                    {suggestion}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <button onClick={handleCitySelect} className="p-2 bg-blue-500 text-white rounded-lg">Select</button>
-        </div>
-      )} */}
-
       {/* Main Content */}
-      { (
-        <div className="flex flex-row items-start justify-center space-x-10 w-full">
-          {/* Left Side - Specialities */}
-          <div className="w-1/4 flex flex-col space-y-4">
-            <h2 className="text-xl font-bold">Browse Specialties</h2>
-            {specialities.map((speciality, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedSpeciality(speciality)}
-                className={`p-3 rounded-lg text-left ${selectedSpeciality === speciality ? 'bg-blue-500 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
-              >
-                {speciality}
-              </button>
-            ))}
-          </div>
-
-          {/* Right Side - Doctors (Filtered Images) */}
-          <div className="w-3/4 grid grid-cols-4 gap-6 z-10">
-            {crewMembers
-              .filter(member => !selectedSpeciality || member.name === selectedSpeciality)
-              .map((member) => (
-                <img
-                  key={member.id}
-                  src={member.image}
-                  alt={member.name}
-                  onClick={() => handleImageClick(member.name)} // Add speciality name
-                  className="w-56 h-56 object-cover rounded-lg shadow-lg transition-transform duration-300 ease-in-out transform hover:scale-110 cursor-pointer"
-                />
-              ))}
-          </div>
+      <div className="flex flex-row items-start justify-center space-x-10 w-full">
+        {/* Left Side - Specialties */}
+        <div className="w-1/4 flex flex-col space-y-4">
+          <h2 className="text-xl font-bold">Browse Specialties</h2>
+          {specialties.map((specialty, index) => (
+            <button
+              key={index}
+              onClick={() => setSelectedSpeciality(specialty === 'All' ? null : specialty)}
+              className={`p-3 rounded-lg text-left transition-colors ${
+                (specialty === 'All' && !selectedSpeciality) || selectedSpeciality === specialty
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 hover:bg-gray-200'
+              }`}
+            >
+              {specialty}
+            </button>
+          ))}
         </div>
-      )}
+
+        {/* Right Side - Doctors List */}
+        <div className="w-3/4">
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            {selectedSpeciality ? `${selectedSpeciality} Doctors` : 'All Doctors'}
+          </h2>
+          {loading ? (
+            <div className="text-center p-8">
+              <Spin size="large" />
+            </div>
+          ) : (
+            <Row gutter={[16, 16]} justify="center">
+              {doctors && doctors.length > 0 ? (
+                doctors
+                  .filter(doctor => !selectedSpeciality || doctor.specialization === selectedSpeciality)
+                  .map((doctor) => (
+                    <Col key={doctor._id} xs={24} sm={12} md={8} lg={6}>
+                      <Card
+                        hoverable
+                        className="h-full"
+                        cover={
+                          <div className="h-48 bg-gray-100 flex items-center justify-center">
+                            <UserOutlined style={{ fontSize: '64px', color: '#1890ff' }} />
+                          </div>
+                        }
+                      >
+                        <Card.Meta
+                          title={`Dr. ${doctor.firstName} ${doctor.lastName}`}
+                          description={
+                            <div>
+                              <p>Specialization: {doctor.specialization}</p>
+                              <p>Experience: {doctor.experience} years</p>
+                              <p>Fees: ₹{doctor.fees}</p>
+                              <p>Timings: {doctor.timings[0]} - {doctor.timings[1]}</p>
+                              <p>Address: {doctor.location}</p>
+                            </div>
+                          }
+                        />
+                        <Button 
+                          type="primary" 
+                          className="mt-4 w-full"
+                          onClick={() => navigate(`/doctor/appointment/${doctor._id}`)}
+                        >
+                          Book Appointment
+                        </Button>
+                      </Card>
+                    </Col>
+                  ))
+              ) : (
+                <Col span={24}>
+                  <div className="text-center p-4">
+                    <p>No doctors found. Please try a different specialty.</p>
+                  </div>
+                </Col>
+              )}
+              {doctors && doctors.length > 0 && doctors.filter(doctor => !selectedSpeciality || doctor.specialization === selectedSpeciality).length === 0 && (
+                <Col span={24}>
+                  <div className="text-center p-4">
+                    <p className="text-lg font-medium text-gray-600">
+                      {selectedSpeciality ? `There are no ${selectedSpeciality} doctors available at the moment.` : 'No doctors found.'}
+                    </p>
+                  </div>
+                </Col>
+              )}
+            </Row>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

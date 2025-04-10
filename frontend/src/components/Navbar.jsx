@@ -8,7 +8,7 @@ import { BellOutlined } from "@ant-design/icons";
 import { adminMenu, userMenu, doctorMenu } from "../Data/data";
 
 // Assets
-import Logo from "../assets/Logo.png";
+import logo from "../assets/logo.jpg";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -50,6 +50,7 @@ const Navbar = () => {
     }
   }, [location.pathname]);
 
+
   // 🔄 Update menu based on user
   useEffect(() => {
     if (!user) {
@@ -76,8 +77,8 @@ const Navbar = () => {
         <div className="flex justify-between h-16 items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <img src={Logo} alt="Logo" className="h-8 w-auto" />
-            <span className="text-xl font-bold text-blue-600">HEALTHAPP</span>
+            <img src={logo} alt="Logo" className="h-8 w-8 rounded-full object-cover" />
+            <span className="text-xl font-bold text-blue-600">AURAHEALTH</span>
           </Link>
 
           {/* Desktop Menu */}

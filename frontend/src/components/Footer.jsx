@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -28,10 +29,10 @@ const Footer = () => {
           <div className="space-y-3">
             <h3 className="text-lg font-semibold text-white">Quick Links</h3>
             <ul className="space-y-1 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Our Services</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Doctors</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Appointments</a></li>
+              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
+              <li><Link to="/doctors" className="hover:text-white transition-colors">Doctors</Link></li>
+              <li className="hover:text-white transition-colors">Appointments</li>
             </ul>
           </div>
 
@@ -39,10 +40,10 @@ const Footer = () => {
           <div className="space-y-3">
             <h3 className="text-lg font-semibold text-white">Our Services</h3>
             <ul className="space-y-1 text-sm">
-              <li><a href="#" className="hover:text-white transition-colors">Primary Care</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Emergency Care</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Diagnostics</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Specialist Care</a></li>
+              <li><Link to="/doctors?specialization=Cardiologist" className="hover:text-white transition-colors">Primary Care</Link></li>
+              <li><Link to="/doctors?specialization=Pediatrician" className="hover:text-white transition-colors">Emergency Care</Link></li>
+              <li><Link to="/doctors?specialization=Dermatologist" className="hover:text-white transition-colors">Diagnostics</Link></li>
+              <li><Link to="/doctors?specialization=Neurologist" className="hover:text-white transition-colors">Specialist Care</Link></li>
             </ul>
           </div>
 
@@ -70,8 +71,8 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-8 pt-6 text-sm text-center">
           <p>© 2024 HealthCare. All rights reserved.</p>
           <div className="mt-2 space-x-4">
-            <a href="#" className="hover:text-white transition-colors">Privacy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms</a>
+            <Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link to="/terms" className="hover:text-white transition-colors">Terms</Link>
           </div>
         </div>
       </div>

@@ -13,6 +13,14 @@ const userSchema = new mongoose.Schema({
         type:String,
         required: [true, 'password is required']
     },
+    phone: {
+        type: String,
+        required: false
+    },
+    gender: {
+        type: String,
+        required: false
+    },
     isAdmin: {
         type: Boolean,
         default: false
@@ -29,7 +37,6 @@ const userSchema = new mongoose.Schema({
         type: Array,
         default: []
     }
-
 })
 
 const userModel = mongoose.models.users || mongoose.model('users', userSchema)

@@ -2,7 +2,9 @@ import mongoose from "mongoose";
 
 const doctorSchema = new mongoose.Schema({
     userId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'users',
+        required: true
     },
     firstName:{
         type: String,
@@ -34,7 +36,10 @@ const doctorSchema = new mongoose.Schema({
         type: Number,
         required:[true]
     },
- 
+    location: {
+        type: String,
+        default: ''  // Optional field with empty string as default
+    },
     timings:{
         type: Object,
         required: [true, 'timming is required']
