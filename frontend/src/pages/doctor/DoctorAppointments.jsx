@@ -4,7 +4,7 @@ import { axiosinstance } from '../../components/utilities/axiosinstance';
 import { useSelector } from 'react-redux';
 import moment from 'moment';
 
-const UserAppointments = () => {
+const DoctorAppointments = () => {
   const [appointments, setAppointments] = useState([]);
   const { user } = useSelector(state => state.user);
 
@@ -18,6 +18,7 @@ const UserAppointments = () => {
         }
       );
       if (res.data.success) {
+        console.log("Appointments data:", res.data.data); // Debug log
         setAppointments(res.data.data);
       }
     } catch (error) {
@@ -62,7 +63,7 @@ const UserAppointments = () => {
       dataIndex: 'name',
       render: (text, record) => (
         <span>
-          {record.userInfo.name}
+          {record.userInfo?.name || 'N/A'}
         </span>
       ),
     },
@@ -71,41 +72,62 @@ const UserAppointments = () => {
       dataIndex: 'email',
       render: (text, record) => (
         <span>
-          {record.userInfo.email}
+          {record.userInfo?.email || 'N/A'}
         </span>
       ),
     },
     {
       title: 'Date & Time',
       dataIndex: 'date',
-      render: (text, record) => (
-        <span>
-          {moment(record.date).format('DD-MM-YYYY')} {moment(record.time).format('HH:mm')}
-        </span>
-      ),
+      render: (text, record) => {
+        console.log("Raw date from DB:", record.date); // Debug log
+        
+        if (!record.date) {
+          return 'No date available';
+        }
+
+        try {
+          // Parse the date string in YYYY-MM-DD format
+          const date = moment(record.date, 'YYYY-MM-DD', true);
+          
+          if (!date.isValid()) {
+            console.log("Invalid date format:", record.date);
+            return 'Invalid date format';
+          }
+          
+          return (
+            <span>
+              {date.format('DD-MM-YYYY')} {record.time}
+            </span>
+          );
+        } catch (error) {
+          console.error("Error parsing date:", error);
+          return 'Error parsing date';
+        }
+      },
     },
     {
       title: 'Status',
       dataIndex: 'status',
     },
     {
-        title: 'Action',
-        dataIndex: 'action',
-        render: (text, record) => (
-            <div> 
-                {record.status === 'pending' && (
-                    <div>
-                        <button className='btn btn-success' onClick={() => handleStatus(record, 'approved')}>Approve</button>
-                        <button className='btn btn-danger ml-2' onClick={() => handleStatus(record, 'rejected')}>Reject</button>
-                    </div>
-                )}
-                {record.status === 'approved' && (
-                    <div>
-                        <button className='btn btn-danger' onClick={() => handleStatus(record, 'rejected')}>Deny</button>
-                    </div>
-                )}
+      title: 'Action',
+      dataIndex: 'action',
+      render: (text, record) => (
+        <div> 
+          {record.status === 'pending' && (
+            <div>
+              <button className='btn btn-success' onClick={() => handleStatus(record, 'approved')}>Approve</button>
+              <button className='btn btn-danger ml-2' onClick={() => handleStatus(record, 'rejected')}>Reject</button>
             </div>
-        ),
+          )}
+          {record.status === 'approved' && (
+            <div>
+              <button className='btn btn-danger' onClick={() => handleStatus(record, 'rejected')}>Deny</button>
+            </div>
+          )}
+        </div>
+      ),
     }
   ];
 
@@ -124,4 +146,4 @@ const UserAppointments = () => {
   );
 };
 
-export default UserAppointments;
+export default DoctorAppointments;

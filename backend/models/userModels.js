@@ -36,6 +36,10 @@ const userSchema = new mongoose.Schema({
     seenNotification: {
         type: Array,
         default: []
+    },
+    reports: {
+        type: Array,
+        default: []
     }
 })
 

@@ -55,7 +55,6 @@ export const login = async(req, res) => {
     }
 }
 
-
 export const getUserData = async(req, res) => {
     try{
         const user = await userModel.findOne({_id: req.userId})
@@ -173,24 +172,62 @@ export const applyDoctors = async (req, res) => {
 export const getNotification = async(req, res) => {
     try{
         const user = await userModel.findOne({_id:req.body.userId})
-        const seenNotification = user.seenNotification
-        const notification = user.notification
-        seenNotification.push(...notification)
-        user.notification = []
-        user.seenNotification = notification
-        const updatedUser = await user.save()
+        if (!user) {
+            return res.status(404).send({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Get current notifications
+        const currentNotifications = [...user.notification];
+        const currentSeenNotifications = [...user.seenNotification];
+
+        // Move current notifications to seen notifications
+        user.seenNotification = [...currentSeenNotifications, ...currentNotifications];
+        user.notification = [];
+        
+        // Save the updated user
+        await user.save();
+        
+        // Send the notification data
         res.status(200).send({
             success: true,
             message: 'Notification fetched successfully',
-            data: updatedUser,
-        })
+            data: {
+                notifications: currentNotifications,
+                seenNotifications: currentSeenNotifications
+            }
+        });
     } catch(error){
-        console.log(error)
+        console.log('Notification error:', error);
         res.status(500).send({
             message: 'Error in Notification',
             success: false,
-            error
-        })
+            error: error.message
+        });
+    }
+}
+
+export const deleteNotification = async(req, res) => {
+    try{
+        const user = await userModel.findOne({_id:req.body.userId})
+        user.notification = []
+        user.seenNotification = []
+        const updatedUser = await user.save()
+        updatedUser.password = undefined
+        res.status(200).send({
+            success: true,
+            message: 'Notification deleted successfully',
+            data: updatedUser,
+        });
+    } catch(error){
+        console.log('Notification error:', error);
+        res.status(500).send({
+            message: 'Error in deleteNotification',
+            success: false,
+            error: error.message
+        });
     }
 }
 
@@ -212,71 +249,150 @@ export const getAllDoc = async(req, res) => {
     }
 }
 
-export const bookAppointment = async(req, res) => {
+export const bookAvailability = async (req, res) => {
     try {
-        req.body.date = moment(req.body.date, "DD-MM-YYYY").toISOString();
-        req.body.time = moment(req.body.time, "HH:mm").toISOString();
-        req.body.status = "pending";
-        const newAppointment = new appointmentModel(req.body);
-        await newAppointment.save();
-        const user = await userModel.findOne({ _id: req.body.doctorInfo.userId });
-        if (user) {
-          user.notification = user.notification || [];
-          user.notification.push({
-            type: "New-appointment-request",
-            message: `A new Appointment Request from ${req.body.userInfo.name}`,
-            onClickPath: "/user/appointments",
-          });
-          await user.save();
+        if (!req.body.date || !req.body.time || !req.body.doctorId) {
+            return res.status(400).send({
+                success: false,
+                message: "Missing required fields"
+            });
         }
-        res.status(200).send({
-          success: true,
-          message: "Appointment Book succesfully",
-        });
-    } catch(error){
-        console.log(error)
-        res.status(500).send({
-            message:'Error booking appointment',
-            success: false,
-            error: error.message
-        })
-    }
-}
 
-export const bookAvailablity = async(req, res) => {
-    try{
-        const date = moment(req.body.date, "DD-MM-YYYY").toISOString();
-        const fromTime = moment(req.body.time, "HH:mm").subtract(1, 'hours').toISOString();
-        const toTime = moment(req.body.time, "HH:mm").add(1, 'hours').toISOString();
-        const doctorId = req.body.doctorId;
-        const appointments = await appointmentModel.find({
-            doctorId, 
-            date,
-            time: {
-                $gte: fromTime,
-                $lte: toTime
-            }
+        // Convert the input date and time to the correct format
+        const formattedDate = moment(req.body.date, "DD-MM-YYYY").format("YYYY-MM-DD");
+        const formattedTime = req.body.time;
+
+        console.log("Checking availability for:", {
+            doctorId: req.body.doctorId,
+            date: formattedDate,
+            time: formattedTime
         });
-        if(appointments.length > 0){
+
+        // Find existing appointments for this doctor on this date and time
+        const existingAppointment = await appointmentModel.findOne({
+            doctorId: req.body.doctorId,
+            date: formattedDate,
+            time: formattedTime
+        });
+
+        console.log("Existing appointment:", existingAppointment);
+
+        if (existingAppointment) {
             return res.status(200).send({
                 success: false,
-                message: "Appointments not available at this time"
-            });
-        } else {
-            return res.status(200).send({
-                success: true,
-                message: "Appointments available"
+                message: "This time slot is already booked"
             });
         }
-    } catch(error){
-        console.log(error);
+
+        return res.status(200).send({
+            success: true,
+            message: "Time slot is available"
+        });
+    } catch (error) {
+        console.log("Error in bookAvailability:", error);
         res.status(500).send({
             success: false,
             error,
-            message: "Error in Booking"
+            message: "Error checking appointment availability"
         });
     }
-}   
+};
+
+export const bookAppointment = async (req, res) => {
+    try {
+        if (!req.body.date || !req.body.time || !req.body.doctorId || !req.body.doctorInfo || !req.body.userInfo) {
+            return res.status(400).send({
+                success: false,
+                message: "Missing required appointment information"
+            });
+        }
+
+        // Parse and validate the date
+        const appointmentDate = moment(req.body.date, "DD-MM-YYYY");
+        if (!appointmentDate.isValid()) {
+            return res.status(400).send({
+                success: false,
+                message: "Invalid date format"
+            });
+        }
+
+        // Parse and validate the time
+        const appointmentTime = moment(req.body.time, "HH:mm");
+        if (!appointmentTime.isValid()) {
+            return res.status(400).send({
+                success: false,
+                message: "Invalid time format"
+            });
+        }
+
+        // Format date and time for storage
+        const formattedDate = appointmentDate.format("YYYY-MM-DD");
+        const formattedTime = appointmentTime.format("HH:mm");
+
+        console.log('Booking appointment with date:', formattedDate, 'time:', formattedTime);
+
+        // Check if date is in the past
+        if (moment(formattedDate).isBefore(moment().startOf('day'))) {
+            return res.status(400).send({
+                success: false,
+                message: "Cannot book appointments for past dates"
+            });
+        }
+
+        // Check if slot is still available
+        const existingAppointment = await appointmentModel.findOne({
+            doctorId: req.body.doctorId,
+            date: formattedDate,
+            time: formattedTime
+        });
+
+        if (existingAppointment) {
+            return res.status(400).send({
+                success: false,
+                message: "This time slot has already been booked"
+            });
+        }
+
+        // Create new appointment with the formatted date and time
+        const newAppointment = new appointmentModel({
+            ...req.body,
+            date: formattedDate,  // Store as YYYY-MM-DD
+            time: formattedTime,  // Store as HH:mm
+            status: "pending"
+        });
+
+        const savedAppointment = await newAppointment.save();
+        console.log('Saved appointment:', {
+            date: savedAppointment.date,
+            time: savedAppointment.time
+        });
+
+        // Send notification to doctor
+        const user = await userModel.findOne({ _id: req.body.doctorInfo.userId });
+        if (user) {
+            user.notification = user.notification || [];
+            user.notification.push({
+                type: "New-appointment-request",
+                message: `A new Appointment Request from ${req.body.userInfo.name}`,
+                onClickPath: "/doctor-appointments",
+                createdAt: new Date()
+            });
+            await user.save();
+        }
+
+        res.status(200).send({
+            success: true,
+            message: "Appointment booked successfully",
+        });
+    } catch (error) {
+        console.log("Error in bookAppointment:", error);
+        res.status(500).send({
+            message: 'Error booking appointment',
+            success: false,
+            error: error.message
+        });
+    }
+};
 
 export const userAppointments = async (req, res) => {
     try {
@@ -285,10 +401,21 @@ export const userAppointments = async (req, res) => {
             .populate('userId', 'name email phone')
             .sort({ createdAt: -1 });
         
+        // Format dates and times before sending
+        const formattedAppointments = appointments.map(apt => {
+            const doc = apt.toObject();
+            return {
+                ...doc,
+                // Keep the original date as stored in DB
+                date: doc.date,
+                time: doc.time
+            };
+        });
+
         res.status(200).send({
             success: true,
             message: "Appointments fetched successfully",
-            data: appointments
+            data: formattedAppointments
         });
     } catch (error) {
         console.log(error);
@@ -304,28 +431,67 @@ export const userAppointments = async (req, res) => {
 
 export const uploadReportController = async (req, res) => {
   try {
-    const userId = req.userId; // JWT middleware se mil raha hai
+    const userId = req.userId;
+    const appointmentId = req.body.appointmentId;
     const file = req.file;
 
     if (!file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
     }
 
     const base64File = file.buffer.toString('base64');
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $push: { reports: base64File } },
+    // Update the appointment with the file
+    const updatedAppointment = await appointmentModel.findByIdAndUpdate(
+      appointmentId,
+      { 
+        $set: { 
+          attachment: base64File,
+          reportUploaded: true
+        } 
+      },
       { new: true }
     );
+
+    if (!updatedAppointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
 
     res.status(200).json({
       success: true,
       message: 'Report uploaded successfully',
-      user: updatedUser,
+      appointment: updatedAppointment,
     });
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ success: false, message: 'Upload failed', error });
+    res.status(500).json({ success: false, message: 'Upload failed', error: error.message });
+  }
+};
+
+export const removeReportController = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+
+    const updatedAppointment = await appointmentModel.findByIdAndUpdate(
+      appointmentId,
+      { 
+        $unset: { attachment: 1 },
+        $set: { reportUploaded: false }
+      },
+      { new: true }
+    );
+
+    if (!updatedAppointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Report removed successfully',
+      appointment: updatedAppointment,
+    });
+  } catch (error) {
+    console.error('Remove error:', error);
+    res.status(500).json({ success: false, message: 'Failed to remove report', error: error.message });
   }
 };

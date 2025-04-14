@@ -1,55 +1,50 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
-import axios from "axios";
-import '@ant-design/v5-patch-for-react-19';
 import { Badge } from "antd";
+import '@ant-design/v5-patch-for-react-19';
 import { BellOutlined } from "@ant-design/icons";
 import { adminMenu, userMenu, doctorMenu } from "../Data/data";
+import { useSelector, useDispatch } from 'react-redux';
+import { axiosinstance } from '../components/utilities/axiosinstance.js';
+import { setUser } from '../redux/features/user.slice.js';
 
 // Assets
 import logo from "../assets/logo.jpg";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
   const [currentMenu, setCurrentMenu] = useState(userMenu);
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { user } = useSelector(state => state.user);
 
-  // 🔄 Fetch user on mount & when pathname changes
+  // 🔄 Fetch user data on mount & when pathname changes
   useEffect(() => {
     const token = localStorage.getItem("token");
-
     if (token) {
       const getUserData = async () => {
         try {
-          const res = await axios.get(
-            "http://localhost:5000/api/v1/user/getUserData",
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
+          const res = await axiosinstance.get("/user/getUserData");
           if (res.data.success) {
-            setUser(res.data.data);
+            dispatch(setUser(res.data.data));
           }
         } catch (error) {
           if (error.response?.status === 401) {
             localStorage.removeItem("token");
-            setUser(null);
+            dispatch(setUser(null));
           }
         }
       };
-
       getUserData();
     } else {
-      setUser(null);
+      dispatch(setUser(null));
     }
-  }, [location.pathname]);
+  }, [location.pathname, dispatch]);
 
+  // Calculate unread notifications count
+  const unreadNotificationsCount = user?.notification?.length || 0;
 
   // 🔄 Update menu based on user
   useEffect(() => {
@@ -67,7 +62,7 @@ const Navbar = () => {
   // 🚪 Logout
   const handleLogout = () => {
     localStorage.removeItem("token");
-    setUser(null);
+    dispatch(setUser(null));
     navigate("/login");
   };
 
@@ -108,13 +103,14 @@ const Navbar = () => {
 
             {user && (
               <Badge
-                count={user.notification}
+                count={unreadNotificationsCount}
                 onClick={() => navigate("/notification")}
                 size="small"
                 className="ml-4 cursor-pointer"
+                style={{ backgroundColor: unreadNotificationsCount > 0 ? '#ff4d4f' : '#52c41a' }}
               >
                 <BellOutlined
-                  className="text-gray-600 hover:text-blue-600"
+                  className={`text-gray-600 hover:text-blue-600 ${unreadNotificationsCount > 0 ? 'animate-bounce' : ''}`}
                   style={{ fontSize: "24px" }}
                 />
               </Badge>

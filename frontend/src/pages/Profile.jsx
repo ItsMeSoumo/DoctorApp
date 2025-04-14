@@ -112,87 +112,122 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 py-12">
       <div className="max-w-3xl mx-auto px-4">
-        <Card className="shadow-lg">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-gray-800">Profile</h1>
-            <div className="space-x-4">
+        <Card 
+          className="shadow-xl rounded-xl border-0 overflow-hidden"
+          bodyStyle={{ padding: '2rem' }}
+        >
+          <div className="flex justify-between items-center mb-8 border-b pb-6">
+            <h1 className="text-3xl font-bold text-gray-800 flex items-center">
+              <span className="bg-blue-100 p-2 rounded-full mr-3 text-blue-600">
+                <UserOutlined className="text-xl" />
+              </span>
+              Profile
+            </h1>
+            <div className="space-x-3">
               {!isEdit ? (
-                <Button type="primary" onClick={() => setIsEdit(true)}>
+                <Button 
+                  type="primary" 
+                  onClick={() => setIsEdit(true)}
+                  size="large"
+                  className="bg-blue-500 hover:bg-blue-600 border-0 font-medium shadow-md"
+                >
                   Edit Profile
                 </Button>
               ) : (
-                <Button type="primary" onClick={handleFinish} loading={loading}>
+                <Button 
+                  type="primary" 
+                  onClick={handleFinish} 
+                  loading={loading}
+                  size="large"
+                  className="bg-green-500 hover:bg-green-600 border-0 font-medium shadow-md"
+                >
                   Save Changes
                 </Button>
               )}
-              <Button onClick={handleLogOut} danger>
+              <Button 
+                onClick={handleLogOut} 
+                danger 
+                size="large"
+                className="hover:bg-red-600 hover:text-white font-medium shadow-md"
+              >
                 Logout
               </Button>
             </div>
           </div>
 
-          <div className="space-y-6">
-            <div className="flex items-center space-x-4">
-              <UserOutlined className="text-gray-400 text-xl" />
+          <div className="space-y-8">
+            <div className="flex items-start space-x-6 bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="bg-blue-50 p-3 rounded-full text-blue-500">
+                <UserOutlined className="text-2xl" />
+              </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Full Name
                 </label>
                 <input
                   type="text"
                   value={userData.name}
                   onChange={(e) => handleInputChange(e, "name")}
                   disabled={!isEdit || loading}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 transition-all duration-200"
+                  placeholder="Enter your full name"
                 />
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <MailOutlined className="text-gray-400 text-xl" />
+            <div className="flex items-start space-x-6 bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="bg-green-50 p-3 rounded-full text-green-500">
+                <MailOutlined className="text-2xl" />
+              </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email Address
                 </label>
                 <input
                   type="email"
                   value={userData.email}
                   onChange={(e) => handleInputChange(e, "email")}
                   disabled={!isEdit || loading}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 transition-all duration-200"
+                  placeholder="Enter your email address"
                 />
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <PhoneOutlined className="text-gray-400 text-xl" />
+            <div className="flex items-start space-x-6 bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="bg-purple-50 p-3 rounded-full text-purple-500">
+                <PhoneOutlined className="text-2xl" />
+              </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Phone
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Phone Number
                 </label>
                 <input
                   type="tel"
                   value={userData.phone}
                   onChange={(e) => handleInputChange(e, "phone")}
                   disabled={!isEdit || loading}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 transition-all duration-200"
+                  placeholder="Enter your phone number"
                 />
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <TeamOutlined className="text-gray-400 text-xl" />
+            <div className="flex items-start space-x-6 bg-white p-5 rounded-lg shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="bg-yellow-50 p-3 rounded-full text-yellow-500">
+                <TeamOutlined className="text-2xl" />
+              </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Gender
                 </label>
                 <Select
@@ -200,7 +235,9 @@ const Profile = () => {
                   onChange={handleGenderChange}
                   disabled={!isEdit || loading}
                   className="w-full"
-                  placeholder="Select gender"
+                  size="large"
+                  placeholder="Select your gender"
+                  dropdownStyle={{ borderRadius: '0.5rem' }}
                 >
                   <Option value="male">Male</Option>
                   <Option value="female">Female</Option>
@@ -209,6 +246,14 @@ const Profile = () => {
               </div>
             </div>
           </div>
+          
+          {isEdit && (
+            <div className="mt-8 pt-6 border-t text-center">
+              <p className="text-gray-500 text-sm mb-4">
+                Make sure your profile information is up-to-date
+              </p>
+            </div>
+          )}
         </Card>
       </div>
     </div>

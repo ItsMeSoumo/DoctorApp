@@ -66,9 +66,24 @@ const DoctorList = () => {
       dataIndex: 'status',
     },
     {
-      title: 'Phone',
-      dataIndex: 'phone',
+      title: 'Email',
+      dataIndex: 'email',
+      render: (text, record) => (
+        <span>
+          {record.email}
+        </span>
+      ),
     },
+    {
+      title: 'Location',
+      dataIndex: 'location',
+      render: (text, record) => (
+        <span>
+          {record.location}
+        </span>
+      ),
+    },
+
     {
       title: 'Actions',
       dataIndex: 'actions',
