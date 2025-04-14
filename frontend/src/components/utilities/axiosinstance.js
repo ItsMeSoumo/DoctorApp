@@ -1,7 +1,7 @@
 import axios from "axios"; 
 
 export const axiosinstance = axios.create({
-  baseURL: 'http://localhost:5000/api/v1',
+  baseURL: import.meta.env.VITE_DB_URL || 'http://localhost:5000/api/v1',
   headers: {
     "Content-Type": "application/json",
   }
